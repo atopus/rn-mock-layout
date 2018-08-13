@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { NativeModules, LayoutAnimation, TouchableNativeFeedback, Text } from 'react-native'
+import { NativeModules, LayoutAnimation, TouchableNativeFeedback, Text, PanResponder, Animated } from 'react-native'
 
 const { UIManager } = NativeModules
 UIManager.setLayoutAnimationEnabledExperimental &&
@@ -15,13 +15,56 @@ const DATA = [
 
 class Panel extends React.Component {
 
+  constructor(props) {
+    super(props)
+    this.state = {
+      pan: new Animated.ValueXY(),
+      opacity: new Animated.Value(1)
+    }
+  }
+
+  componentWillMount() {
+
+    this._val = { x:0, y:0 }
+    this.state.pan.addListener((value) => this._val = value);
+
+    this.panResponder = PanResponder.create({
+      onStartShouldSetPanResponder: (e, gesture) => true,
+      onPanResponderGrant: (e, gesture) => {
+        Animated.timing(this.state.opacity, {
+          toValue: 0.5,
+          duration: 200
+        }).start()
+        this.state.pan.setOffset({
+          x: this._val.x,
+          y: this._val.y
+        })
+        this.state.pan.setValue({ x:0, y:0})
+      },
+      onPanResponderMove: Animated.event([ 
+        null, { dx: this.state.pan.x, dy: this.state.pan.y }
+      ]),
+      onPanResponderRelease: (e, gesture) => {
+        Animated.timing(this.state.opacity, {
+          toValue: 1,
+          duration: 200
+        }).start()
+      }
+    })
+  }
+
   render() {
+
+    const panStyle = {
+      transform: this.state.pan.getTranslateTransform()
+    }
     return (
-      <TouchableNativeFeedback>
-        <View style={styles.panel}>
+        <Animated.View 
+          {...this.panResponder.panHandlers} 
+          style={[panStyle, styles.panel, { opacity:this.state.opacity }]}
+        >
           <Text style={styles.label}>{this.props.label}</Text>
-        </View>
-      </TouchableNativeFeedback>
+        </Animated.View>      
       )
   }
 }

@@ -15,3 +15,7 @@ To be followed...
 ## Licence
 
 MIT
+
+## See also / credits 
+
+* https://snack.expo.io/@yoobidev/draggable-component
